@@ -23,14 +23,22 @@ export default async function PageContent({ searchParams }: PageContentProps) {
     <div className="flex gap-4">
       <div className="hidden lg:block w-80 shrink-0 -ml-2">
         <div className="sticky top-27">
-          <Sidebar discountFilter={discount} priceMin={min} priceMax={max} />
+          <Sidebar
+            discountFilter={discount}
+            appliedMin={min}
+            appliedMax={max}
+          />
         </div>
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-2">
           <div className="lg:hidden">
-            <Sidebar discountFilter={discount} priceMin={min} priceMax={max} />
+            <Sidebar
+              discountFilter={discount}
+              appliedMin={min}
+              appliedMax={max}
+            />
           </div>
 
           <div className="hidden lg:block" />

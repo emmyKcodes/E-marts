@@ -1,21 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PRICE_BOUNDS } from "@/lib/products";
 
-export type DiscountFilter = "all" | "with" | "without";
+type DiscountFilter = "all" | "with" | "without";
 
-export interface SidebarProps {
-  discountFilter?: DiscountFilter;
-  onDiscountChange?: (value: DiscountFilter) => void;
-  priceMin?: string;
-  priceMax?: string;
-  onPriceMinChange?: (value: string) => void;
-  onPriceMaxChange?: (value: string) => void;
-  onPriceSave?: () => void;
-  onPriceClear?: () => void;
-  activeFilters?: string[];
-  onClearAll?: () => void;
+interface SidebarProps {
+  discountFilter: DiscountFilter;
+  appliedMin: string;
+  appliedMax: string;
 }
 
 function CheckIcon() {
@@ -93,7 +87,11 @@ function RadioOption({
       onClick={() => onChange(value)}
     >
       <span
-        className={`w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 transition-all duration-150 ${selected ? "" : "border-2 border-gray-300 group-hover:border-gray-400 bg-white"}`}
+        className={`w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 transition-all duration-150 ${
+          selected
+            ? ""
+            : "border-2 border-gray-300 group-hover:border-gray-400 bg-white"
+        }`}
         style={
           selected
             ? { backgroundColor: "#9bbc55", border: "2px solid #9bbc55" }
@@ -107,7 +105,11 @@ function RadioOption({
         )}
       </span>
       <span
-        className={`text-[13.5px] transition-colors ${selected ? "font-600 text-black" : "font-400 text-gray-700 group-hover:text-black"}`}
+        className={`text-[13.5px] transition-colors ${
+          selected
+            ? "font-600 text-black"
+            : "font-400 text-gray-700 group-hover:text-black"
+        }`}
       >
         {label}
       </span>
@@ -116,56 +118,74 @@ function RadioOption({
 }
 
 export default function Sidebar({
-  discountFilter = "all",
-  onDiscountChange,
-  priceMin = "",
-  priceMax = "",
-  onPriceMinChange,
-  onPriceMaxChange,
-  onPriceSave,
-  onPriceClear,
-  activeFilters = ["Mens-Clothing"],
-  onClearAll,
+  discountFilter,
+  appliedMin,
+  appliedMax,
 }: SidebarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [priceMin, setPriceMin] = useState(appliedMin);
+  const [priceMax, setPriceMax] = useState(appliedMax);
   const [openCategory, setOpenCategory] = useState<string | null>("Fashion");
   const [mensSelected, setMensSelected] = useState(false);
 
-  const handleDiscountChange = (v: string) =>
-    onDiscountChange?.(v as DiscountFilter);
+  function updateParam(updates: Record<string, string>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    router.push(`?${params.toString()}`);
+  }
+
+  function handleDiscountChange(value: string) {
+    updateParam({ discount: value === "all" ? "" : value });
+  }
+
+  function handlePriceSave() {
+    updateParam({ min: priceMin, max: priceMax });
+  }
+
+  function handlePriceClear() {
+    setPriceMin("");
+    setPriceMax("");
+    updateParam({ min: "", max: "" });
+  }
+
+  function handleClearAll() {
+    setPriceMin("");
+    setPriceMax("");
+    updateParam({ discount: "", min: "", max: "" });
+  }
+
+  const hasActiveFilters =
+    discountFilter !== "all" || appliedMin !== "" || appliedMax !== "";
 
   return (
     <>
       <aside className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 p-4">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[15px] font-bold text-black">Filters</span>
-          {(activeFilters.length > 0 || onClearAll) && (
+          {hasActiveFilters && (
             <button
-              onClick={onClearAll}
+              onClick={handleClearAll}
               className="text-[12.5px] font-500 text-gray-500 hover:text-black transition-colors"
             >
               Clear All
             </button>
           )}
         </div>
-        {activeFilters.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {activeFilters.map((f) => (
-              <span
-                key={f}
-                className="flex items-center gap-1.5 text-[12px] font-500 text-gray-700 border rounded-md px-2.5 py-0.5"
-              >
-                {f}
-                <button
-                  onClick={onClearAll}
-                  className="text-gray-400 hover:text-black leading-none text-[14px]"
-                  aria-label={`Remove ${f} filter`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="flex items-center gap-1.5 text-[12px] font-500 text-gray-700 border rounded-md px-2.5 py-0.5">
+            Mens-Clothing
+          </span>
+        </div>
+
         <Section title="Discount">
           <div>
             <RadioOption
@@ -188,6 +208,7 @@ export default function Sidebar({
             />
           </div>
         </Section>
+
         <Section title="Price (₦)">
           <div className="space-y-3">
             <div className="flex justify-between text-[11.5px] text-gray-400">
@@ -196,39 +217,47 @@ export default function Sidebar({
             </div>
             <div className="flex items-center gap-2">
               <div
-                className={`flex-1 flex items-center border rounded-md px-3 py-2 transition-all duration-150 ${priceMin ? "border-gray-400 bg-white" : "border-gray-200 bg-gray-50"} focus-within:ring-2`}
+                className={`flex-1 flex items-center border rounded-md px-3 py-2 transition-all duration-150 ${
+                  priceMin
+                    ? "border-gray-400 bg-white"
+                    : "border-gray-200 bg-gray-50"
+                } focus-within:ring-2`}
               >
                 <input
                   type="number"
                   placeholder="Min"
                   value={priceMin}
-                  onChange={(e) => onPriceMinChange?.(e.target.value)}
+                  onChange={(e) => setPriceMin(e.target.value)}
                   className="w-full bg-transparent outline-none text-[13px] text-gray-800 placeholder:text-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
               <span className="text-gray-300 text-[13px]">—</span>
               <div
-                className={`flex-1 flex items-center border rounded-md px-3 py-2 transition-all duration-150 ${priceMax ? "border-gray-400 bg-white" : "border-gray-200 bg-gray-50"}`}
+                className={`flex-1 flex items-center border rounded-md px-3 py-2 transition-all duration-150 ${
+                  priceMax
+                    ? "border-gray-400 bg-white"
+                    : "border-gray-200 bg-gray-50"
+                }`}
               >
                 <input
                   type="number"
                   placeholder="Max"
                   value={priceMax}
-                  onChange={(e) => onPriceMaxChange?.(e.target.value)}
+                  onChange={(e) => setPriceMax(e.target.value)}
                   className="w-full bg-transparent outline-none text-[13px] text-gray-800 placeholder:text-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
             </div>
             <div className="flex items-center justify-between pt-0.5">
               <button
-                onClick={onPriceClear}
+                onClick={handlePriceClear}
                 className="text-[12.5px] text-sm text-gray-500 hover:text-black transition-colors"
               >
                 Clear
               </button>
               <button
-                onClick={onPriceSave}
-                className="text-[12.5px] font-600 transition-colors"
+                onClick={handlePriceSave}
+                className="text-[12.5px] font-600 transition-colors cursor-pointer"
                 style={{ color: "#5a9e00" }}
               >
                 Save
@@ -236,6 +265,7 @@ export default function Sidebar({
             </div>
           </div>
         </Section>
+
         <Section title="Categories">
           <div className="space-y-1">
             <button
@@ -247,8 +277,11 @@ export default function Sidebar({
               <span className="text-[13.5px] font-bold text-black">
                 Fashion
               </span>
-              <span className="text-[18px] font-bold  text-gray-700">-</span>
+              <span className="text-[18px] font-bold text-gray-700">
+                {openCategory === "Fashion" ? "-" : "+"}
+              </span>
             </button>
+
             {openCategory === "Fashion" && (
               <div className="mt-1 ml-3 space-y-0.5">
                 <label
@@ -256,7 +289,7 @@ export default function Sidebar({
                   onClick={() => setMensSelected((s) => !s)}
                 >
                   <span
-                    className={`w-4 h-4 rounded-xl     flex items-center justify-center shrink-0 transition-all duration-150 ${
+                    className={`w-4 h-4 rounded-xl flex items-center justify-center shrink-0 transition-all duration-150 ${
                       mensSelected
                         ? ""
                         : "border-2 border-gray-300 group-hover:border-gray-400 bg-white"

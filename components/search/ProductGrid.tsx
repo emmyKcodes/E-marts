@@ -1,5 +1,6 @@
 import type { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
+import { FiSearch } from "react-icons/fi";
 
 interface ProductGridProps {
   products: Product[];
@@ -9,7 +10,9 @@ export default function ProductGrid({ products }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <span className="text-5xl mb-4">🔍</span>
+        <span className="text-5xl mb-4">
+          <FiSearch size={20} />
+        </span>
         <p className="text-[16px] font-600 text-gray-800">No products found</p>
         <p className="text-[13.5px] text-gray-400 mt-1">
           Try adjusting your filters or clearing the price range.

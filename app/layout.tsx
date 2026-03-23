@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "ecommerce Nigeria",
   ],
   applicationName: "E-Marts",
-  authors: [{ name: "E-Marts Team", url: "https://emarts.ng" }],
+  authors: [{ name: "E-Marts Team", url: "https://e-marts-six.vercel.app/" }],
   creator: "E-Marts",
   publisher: "E-Marts",
   category: "Shopping",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_NG",
     siteName: "E-Marts",
-    url: "https://emarts.ng",
+    url: "https://e-marts-six.vercel.app/",
   },
 
   icons: {
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: "https://emarts.ng",
+    canonical: "https://e-marts-six.vercel.app/",
   },
 
   formatDetection: {
